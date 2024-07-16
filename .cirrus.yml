@@ -1,21 +1,25 @@
 x86_docker_builder:
   env:
     GITHUB_TOKEN: ENCRYPTED[6de9aa5f7d13ffb5f3b3baa671fa9bc0fc0b618a1b7b673a69c2308b4e5ffe4bc1cd327684cc622d5d85a1b4ab219268]
-  build_script: docker build -t ghcr.io/cheriot-platform/sail:x86_64-latest .
+  build_base_script: docker build -t ghcr.io/cheriot-platform/sail:amd64-latest sail
+  build_latex_script: docker build -t ghcr.io/cheriot-platform/sail-latex:amd64-latest LaTeX
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
-    if [  "$CIRRUS_BRANCH" == 'main' ] ; then docker push ghcr.io/cheriot-platform/sail:x86_64-latest ; fi
+    if [  "$CIRRUS_BRANCH" == 'main' ] ; then docker push ghcr.io/cheriot-platform/sail:amd64-latest ; fi
+    if [  "$CIRRUS_BRANCH" == 'main' ] ; then docker push ghcr.io/cheriot-platform/sail-latex:amd64-latest ; fi
 
 arm_docker_builder:
   env:
     CIRRUS_ARCH: arm64
     GITHUB_TOKEN: ENCRYPTED[6de9aa5f7d13ffb5f3b3baa671fa9bc0fc0b618a1b7b673a69c2308b4e5ffe4bc1cd327684cc622d5d85a1b4ab219268]
-  build_script: docker build -t ghcr.io/cheriot-platform/sail:aarch64-latest .
+  build_script: docker build -t ghcr.io/cheriot-platform/sail:arm64-latest sail
+  build_latex_script: docker build -t ghcr.io/cheriot-platform/sail-latex:arm64-latest LaTeX
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
-    if [  "$CIRRUS_BRANCH" == 'main' ] ; then docker push ghcr.io/cheriot-platform/sail:aarch64-latest ; fi
+    if [  "$CIRRUS_BRANCH" == 'main' ] ; then docker push ghcr.io/cheriot-platform/sail:arm64-latest ; fi
+    if [  "$CIRRUS_BRANCH" == 'main' ] ; then docker push ghcr.io/cheriot-platform/sail-latex:arm64-latest ; fi
 
 final_docker_builder:
   only_if: $CIRRUS_BRANCH == "main"
@@ -26,5 +30,7 @@ final_docker_builder:
     - arm
   login_script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
   manifest_script:
-    - docker manifest create ghcr.io/cheriot-platform/sail:latest --amend ghcr.io/cheriot-platform/sail:x86_64-latest --amend ghcr.io/cheriot-platform/sail:aarch64-latest
+    - docker manifest create ghcr.io/cheriot-platform/sail:latest --amend ghcr.io/cheriot-platform/sail:amd64-latest --amend ghcr.io/cheriot-platform/sail:arm64-latest
     - docker manifest push --purge ghcr.io/cheriot-platform/sail:latest
+    - docker manifest create ghcr.io/cheriot-platform/sail-latex:latest --amend ghcr.io/cheriot-platform/sail-latex:amd64-latest --amend ghcr.io/cheriot-platform/sail-latex:arm64-latest
+    - docker manifest push --purge ghcr.io/cheriot-platform/sail-latex:latest
