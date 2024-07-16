@@ -1,6 +1,6 @@
 x86_docker_builder:
   env:
-    GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
+    GITHUB_TOKEN: ENCRYPTED[6de9aa5f7d13ffb5f3b3baa671fa9bc0fc0b618a1b7b673a69c2308b4e5ffe4bc1cd327684cc622d5d85a1b4ab219268]
   build_script: docker build -t ghcr.io/cheriot-platform/sail:x86_64-latest .
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
@@ -10,7 +10,7 @@ x86_docker_builder:
 arm_docker_builder:
   env:
     CIRRUS_ARCH: arm64
-    GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
+    GITHUB_TOKEN: ENCRYPTED[6de9aa5f7d13ffb5f3b3baa671fa9bc0fc0b618a1b7b673a69c2308b4e5ffe4bc1cd327684cc622d5d85a1b4ab219268]
   build_script: docker build -t ghcr.io/cheriot-platform/sail:aarch64-latest .
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
@@ -20,7 +20,7 @@ arm_docker_builder:
 final_docker_builder:
   only_if: $CIRRUS_BRANCH == "main"
   env:
-    GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
+    GITHUB_TOKEN: ENCRYPTED[6de9aa5f7d13ffb5f3b3baa671fa9bc0fc0b618a1b7b673a69c2308b4e5ffe4bc1cd327684cc622d5d85a1b4ab219268]
   depends_on:
     - x86
     - arm
