@@ -47,7 +47,7 @@ jobs:
         run: |
           docker build \
             --provenance=false \
-            -t ghcr.io/cheriot-platform/sail:${{ matrix.docker_arch }}-latest LaTeX
+            -t ghcr.io/cheriot-platform/sail-latex:${{ matrix.docker_arch }}-latest LaTeX
 
       - name: Login to container registry
         if: github.ref == 'refs/heads/main'
