@@ -59,7 +59,7 @@ jobs:
 
       - name: Push arch-specific image
         if: github.ref == 'refs/heads/main'
-        run:
+        run: |
           docker push ghcr.io/cheriot-platform/sail:${{ matrix.docker_arch }}-latest
           docker push ghcr.io/cheriot-platform/sail-latex:${{ matrix.docker_arch }}-latest
 
