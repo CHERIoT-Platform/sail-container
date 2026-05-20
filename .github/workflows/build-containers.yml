@@ -1,0 +1,93 @@
+name: Build and push devcontainer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build devcontainer (${{ matrix.docker_arch }})
+    runs-on: "cirun-gcp-${{ matrix.arch }}--${{ github.run_id }}"
+    timeout-minutes: 120
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            docker_arch: x86_64
+          - arch: aarch64
+            docker_arch: aarch64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install docker
+        run: |
+          sudo apt update && sudo apt install -y docker.io docker-buildx
+
+      - name: Build base image
+        run: |
+          docker build \
+            --provenance=false \
+            -t ghcr.io/cheriot-platform/sail:${{ matrix.docker_arch }}-latest sail
+
+      - name: Build LaTeX image
+        run: |
+          docker build \
+            --provenance=false \
+            -t ghcr.io/cheriot-platform/sail:${{ matrix.docker_arch }}-latest LaTeX
+
+      - name: Login to container registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push arch-specific image
+        if: github.ref == 'refs/heads/main'
+        run:
+          docker push ghcr.io/cheriot-platform/sail:${{ matrix.docker_arch }}-latest
+          docker push ghcr.io/cheriot-platform/sail-latex:${{ matrix.docker_arch }}-latest
+
+  manifest:
+    name: Create and push multi-arch manifest
+    runs-on: ubuntu-24.04
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Login to container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifests
+        run: |
+          docker manifest create ghcr.io/cheriot-platform/sail:latest \
+            --amend ghcr.io/cheriot-platform/sail:x86_64-latest \
+            --amend ghcr.io/cheriot-platform/sail:aarch64-latest
+          docker manifest push --purge ghcr.io/cheriot-platform/sail:latest
+
+          docker manifest create ghcr.io/cheriot-platform/sail-latex:latest \
+            --amend ghcr.io/cheriot-platform/sail-latex:x86_64-latest \
+            --amend ghcr.io/cheriot-platform/sail-latex:aarch64-latest
+          docker manifest push --purge ghcr.io/cheriot-platform/sail-latex:latest
